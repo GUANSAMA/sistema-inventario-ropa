@@ -11,7 +11,6 @@ actor "Operador / Admin" as User
 participant "FrmGestionPrendas\n(UI)" as UI
 participant "PrendaBLL\n(BLL)" as BLL
 participant "PrendaDAL\n(DAL)" as DAL
-participant "AuditoriaDAL\n(DAL Audit)" as AuditDAL
 database "SQL Server\n(InventarioRopaDB)" as DB
 
 User -> UI: Ingresa datos de prenda y hace clic en 'Guardar'
@@ -26,25 +25,30 @@ else Datos Válidos
 
     BLL -> BLL: ValidarPrecio(precio) (Control CLP sin decimales)
     
-    BLL -> DAL: Insertar(prendaDto)
+    BLL -> DAL: Insertar(prendaDto, idUsuario)
     activate DAL
-    DAL -> DB: Ejecuta SQL Parametrizado (Previene SQLi)
-    DB --> DAL: Confirma inserción exitosa
+    DAL -> DB: Ejecuta sp_Prenda_Insertar con parámetros
+    activate DB
+    DB -> DB: Establece SESSION_CONTEXT(IdUsuario)
+    DB -> DB: Inserta Prenda
+    DB -> DB: trg_Prenda_Insertar inserta AuditoriaInventario
+    DB --> DAL: Devuelve IdPrendaNueva
+    deactivate DB
     DAL --> BLL: Retorna true
     deactivate DAL
-
-    BLL -> AuditDAL: RegistrarAccion(idPrenda, idUsuario, "INSERT")
-    activate AuditDAL
-    AuditDAL -> DB: Inserta registro en AuditoriaInventario
-    DB --> AuditDAL: Confirma registro de auditoría
-    AuditDAL --> BLL: Retorna true
-    deactivate AuditDAL
 
     BLL --> UI: Retorna éxito general
     deactivate BLL
 
     UI --> User: Muestra mensaje "Prenda guardada con éxito"
 end
+
+note over DAL, DB
+La auditoría la escribe el trigger dentro de la misma operación
+de base de datos. La aplicación no inserta una segunda fila de auditoría.
+Si falta un usuario válido en el contexto de sesión, el trigger rechaza
+la operación para evitar registros sin identidad.
+end note
 
 deactivate UI
 @enduml

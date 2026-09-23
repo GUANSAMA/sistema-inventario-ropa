@@ -2,7 +2,7 @@
 
 **Proyecto:** Sistema de Inventario de Ropa — Tienda Moda Urbana
 **Asignatura:** Programación Segura
-**Fuente:** derivado del diagrama de clases (`docs/diagrama-clases.puml`), paquete `Entities`
+**Fuente:** derivado del diagrama de clases (`docs/3diagrama_clases.md`), paquete `Entities`
 
 ## 1. Diccionario de datos
 
@@ -74,7 +74,7 @@ Hash y sal en `VARBINARY` porque PBKDF2 produce bytes, no texto; evita conversio
 | ValoresAnteriores | NVARCHAR(MAX) | NULL |
 | ValoresNuevos | NVARCHAR(MAX) | NULL |
 
-`ValoresAnteriores`/`ValoresNuevos` en JSON (`FOR JSON PATH`) — es la única columna no atómica del modelo, y es una excepción deliberada: guardar una fotografía completa del registro es más simple y más útil para auditoría que normalizar cada campo cambiado en su propia fila.
+`ValoresAnteriores`/`ValoresNuevos` guardan una representación JSON de la fila (`FOR JSON PATH`). Se conserva la fotografía del registro para facilitar la consulta histórica; no se usan esos campos como datos operativos ni para búsquedas relacionales.
 
 ## 2. Diagrama entidad-relación
 
@@ -178,6 +178,6 @@ No hay dependencias transitivas: ningún atributo no clave depende de otro atrib
 
 Restricciones adicionales que refuerzan RF05 y RNF04: `UNIQUE` en `CodigoSKU`, `Nombre` de catálogos y `NombreUsuario`; `CHECK` en `Precio`, `Stock`, `StockMinimo`, `Rol` y `Operacion`; `DEFAULT` en las columnas `Activo` y en `FechaHora`.
 
-## 5. Próxima fase
+## 5. Correspondencia con los scripts SQL
 
-Con este modelo cerrado, la Fase 3 traduce estas tablas a los scripts `database/02_crear_tablas.sql`, `03_insertar_datos_prueba.sql`, y luego los procedimientos almacenados y triggers de auditoría — sin cambiar aquí ningún nombre de columna, para que el código no tenga que ajustarse después.
+El modelo está implementado inicialmente en `database/02_crear_tablas.sql`, `03_insertar_datos_prueba.sql`, `04_crear_procedimientos.sql` y `05_crear_triggers_auditoria.sql`. El orden de ejecución es `01_crear_base_datos.sql`, `02_crear_tablas.sql`, `03_insertar_datos_prueba.sql`, `04_crear_procedimientos.sql` y `05_crear_triggers_auditoria.sql`. Antes de considerarlo validado, se deben ejecutar los scripts y comprobar las restricciones y operaciones en SQL Server.

@@ -22,7 +22,8 @@ rectangle "Sistema de Inventario de Ropa" {
 
   usecase "RF01\nIniciar sesión" as Login
 
-  usecase "RF02\nGestionar prendas\n(CRUD y desactivación)" as Prendas
+  usecase "RF02\nGestionar prendas\n(consultar, registrar y modificar)" as Prendas
+  usecase "RF02\nDesactivar prenda" as Desactivar
 
   usecase "RF03\nConsultar catálogos" as Catalogos
 
@@ -38,6 +39,7 @@ rectangle "Sistema de Inventario de Ropa" {
 ' Funciones del Administrador
 Admin --> Login
 Admin --> Prendas
+Admin --> Desactivar
 Admin --> Catalogos
 Admin --> Filtros
 Admin --> Auditoria
@@ -62,7 +64,7 @@ Incluye:
 - Registrar prendas.
 - Consultar prendas.
 - Modificar prendas.
-- Desactivar lógicamente.
+- Desactivar lógicamente: solo Administrador.
 - RF05: validar precio y stock.
 - RF06: registrar auditoría automática.
 end note

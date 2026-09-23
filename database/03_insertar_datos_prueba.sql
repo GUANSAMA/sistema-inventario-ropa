@@ -20,19 +20,17 @@ INSERT INTO Color (Nombre) VALUES
 GO
 
 -- ==========================================
--- Usuarios de prueba
+-- Alta inicial del Administrador
 -- ==========================================
--- IMPORTANTE: PasswordHash/PasswordSalt aquí son valores de RELLENO
--- (0x00...), NO contraseñas reales. En la Fase 4 la aplicación C#
--- generará el hash real con PBKDF2 la primera vez que se defina una
--- contraseña, o mediante una pantalla de "restablecer clave". Nunca
--- se sube al repositorio un hash real de una clave que uses de verdad.
-
-INSERT INTO UsuarioSistema (NombreUsuario, NombreCompleto, PasswordHash, PasswordSalt, Rol) VALUES
-    ('admin',   'Guillermo Sanchez (Administrador)', 0x00, 0x00, 'Administrador'),
-    ('bodega1', 'Operador de Bodega Uno',             0x00, 0x00, 'Operador de Bodega');
+-- No se insertan hashes de relleno ni credenciales compartidas en este
+-- script. En el primer inicio, la aplicación debe detectar que no existen
+-- usuarios y ofrecer un alta inicial de Administrador. La aplicación genera
+-- hash y salt con PBKDF2 y llama a sp_Usuario_CrearAdministradorInicial. Después de crear
+-- el Administrador, el alta inicial debe quedar deshabilitada; las cuentas
+-- siguientes se crean desde la función de gestión de usuarios.
+-- El IdUsuario creado debe enviarse a los procedimientos de prendas para
+-- que los triggers puedan atribuir correctamente cada cambio.
 GO
-
 -- ==========================================
 -- Prendas de ejemplo (18 filas)
 -- Usa subconsultas por Nombre para no depender de que los IDENTITY

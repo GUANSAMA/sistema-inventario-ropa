@@ -13,10 +13,17 @@ BEGIN
 
     DECLARE @IdUsuario INT = TRY_CAST(SESSION_CONTEXT(N'IdUsuario') AS INT);
 
+    IF @IdUsuario IS NULL OR NOT EXISTS (
+        SELECT 1 FROM UsuarioSistema WHERE IdUsuario = @IdUsuario AND Activo = 1
+    )
+    BEGIN
+        ;THROW 51001, 'La auditoría requiere un IdUsuario activo en SESSION_CONTEXT.', 1;
+    END;
+
     INSERT INTO AuditoriaInventario (IdPrenda, IdUsuario, Operacion, ValoresNuevos)
     SELECT
         i.IdPrenda,
-        ISNULL(@IdUsuario, 0),
+        @IdUsuario,
         'INSERT',
         (SELECT i2.* FROM Prenda i2 WHERE i2.IdPrenda = i.IdPrenda FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)
     FROM inserted i;
@@ -25,8 +32,7 @@ GO
 
 -- ==========================================
 -- Trigger de UPDATE
--- Distingue una edición normal de una desactivación:
--- si Activo pasó de 1 a 0, la operación se registra como DESACTIVAR.
+-- Distingue una edición normal de una desactivación.
 -- ==========================================
 CREATE OR ALTER TRIGGER trg_Prenda_Actualizar
 ON Prenda
@@ -37,10 +43,17 @@ BEGIN
 
     DECLARE @IdUsuario INT = TRY_CAST(SESSION_CONTEXT(N'IdUsuario') AS INT);
 
+    IF @IdUsuario IS NULL OR NOT EXISTS (
+        SELECT 1 FROM UsuarioSistema WHERE IdUsuario = @IdUsuario AND Activo = 1
+    )
+    BEGIN
+        ;THROW 51002, 'La auditoría requiere un IdUsuario activo en SESSION_CONTEXT.', 1;
+    END;
+
     INSERT INTO AuditoriaInventario (IdPrenda, IdUsuario, Operacion, ValoresAnteriores, ValoresNuevos)
     SELECT
         d.IdPrenda,
-        ISNULL(@IdUsuario, 0),
+        @IdUsuario,
         CASE WHEN d.Activo = 1 AND i.Activo = 0 THEN 'DESACTIVAR' ELSE 'UPDATE' END,
         (SELECT d2.* FROM deleted d2 WHERE d2.IdPrenda = d.IdPrenda FOR JSON PATH, WITHOUT_ARRAY_WRAPPER),
         (SELECT i2.* FROM inserted i2 WHERE i2.IdPrenda = d.IdPrenda FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)

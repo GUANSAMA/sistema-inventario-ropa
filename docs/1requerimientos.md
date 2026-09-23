@@ -80,7 +80,7 @@ El Administrador podrá iniciar sesión, consultar el inventario, registrar y mo
 
 ### 8.2 Operador de Bodega
 
-El Operador de Bodega podrá iniciar sesión, consultar el inventario y realizar las operaciones de inventario autorizadas por su rol. No podrá gestionar usuarios ni consultar la auditoría si no posee ese permiso.
+El Operador de Bodega podrá iniciar sesión, consultar, registrar y modificar prendas. No podrá desactivar prendas, gestionar usuarios ni consultar la auditoría.
 
 ### 8.3 Sistema
 
@@ -94,7 +94,7 @@ El sistema debe permitir que un usuario registrado inicie sesión con sus creden
 
 ### RF02 — Gestión de prendas
 
-El sistema debe permitir registrar, consultar, modificar y desactivar prendas. Cada prenda debe relacionarse con una categoría, talla y color existentes y activos.
+El sistema debe permitir registrar, consultar y modificar prendas a ambos roles autorizados. Solo el Administrador podrá desactivar una prenda. Cada prenda debe relacionarse con una categoría, talla y color existentes y activos.
 
 La desactivación será lógica mediante el campo `Activo`. No se eliminará físicamente la prenda desde la aplicación, para conservar la trazabilidad histórica.
 
@@ -154,7 +154,7 @@ La base de datos debe utilizar claves primarias, claves foráneas, restricciones
 
 ### RNF05 — Seguridad de credenciales
 
-Las contraseñas de `UsuarioSistema` no deben almacenarse en texto plano. La autenticación de la aplicación debe diferenciarse de la autenticación integrada de Windows utilizada por la conexión a SQL Server.
+Las contraseñas de `UsuarioSistema` no deben almacenarse en texto plano. La aplicación genera un hash PBKDF2 con salt aleatorio mediante una implementación criptográfica estándar de .NET. El primer Administrador se crea usando `sp_Usuario_CrearAdministradorInicial`, que solo permite el alta mientras la tabla no tenga usuarios; así se evita guardar credenciales de prueba o permitir dos altas iniciales concurrentes. Después, ese procedimiento rechaza nuevos intentos y las cuentas siguientes se crean desde la función de gestión de usuarios. La autenticación de la aplicación se diferencia de la autenticación integrada de Windows utilizada por la conexión a SQL Server.
 
 ### RNF06 — Usabilidad
 
@@ -187,7 +187,7 @@ La tríada se define mediante **Rol o Usuario + Necesidad o Acción + Criterio d
 | ID | Rol o usuario | Necesidad o acción | Criterio de aceptación y seguridad |
 |---|---|---|---|
 | TR01 | Administrador y Operador de Bodega | Iniciar sesión para acceder al sistema según el rol asignado. | Las credenciales válidas permiten el acceso; las inválidas son rechazadas; la contraseña no se almacena en texto plano y las funciones se limitan según el rol. |
-| TR02 | Administrador y Operador autorizado | Registrar, consultar, modificar y desactivar prendas. | El SKU es único; las claves foráneas existen; los datos válidos se guardan mediante procedimientos almacenados; la desactivación cambia `Activo` y conserva el historial. |
+| TR02 | Administrador y Operador de Bodega | Registrar, consultar y modificar prendas; el Administrador también puede desactivarlas. | El SKU es único; las claves foráneas existen; los datos válidos se guardan mediante procedimientos almacenados; solo el Administrador puede desactivar y esa operación cambia `Activo` y conserva el historial. |
 | TR03 | Administrador y Operador autorizado | Seleccionar categorías, tallas y colores activos para clasificar una prenda. | Los controles muestran solo catálogos válidos y la base rechaza referencias inexistentes o inactivas. |
 | TR04 | Administrador y Operador de Bodega | Buscar y filtrar el inventario. | La grilla muestra únicamente los registros que coinciden con los filtros y la búsqueda utiliza parámetros sin concatenar entradas SQL. |
 | TR05 | Administrador y Operador autorizado | Mantener precios y cantidades de stock válidas. | Se rechazan precios menores o iguales a cero, stock negativo y stock mínimo negativo; el precio se almacena como `DECIMAL(10,0)`. |
@@ -266,10 +266,10 @@ La aplicación Windows Forms deberá implementar las funciones de UI, mientras q
 
 ## 16. Próxima fase
 
-La siguiente fase será el modelado UML y el diseño de la base de datos. Antes de crear los diagramas se debe verificar que los nombres de requerimientos, entidades, roles y operaciones sean los mismos en toda la documentación.
+Los diagramas UML, el modelo relacional, los scripts y una primera implementación WinForms ya están preparados. La siguiente etapa es ejecutar la base, compilar la solución y revisar los flujos funcionales y de seguridad.
 
 ## Referencias
 
-[1]: /home/ubuntu/upload/Guia_Trabajo_Practico_y_Rubrica_Evaluacion_v21(2).pdf "Guía de Trabajo Práctico Integrador y Rúbrica de Evaluación"
+[1]: Guía de Trabajo Práctico Integrador y Rúbrica de Evaluación, PDF entregado por el docente.
 
 [2]: https://github.com/GUANSAMA/sistema-inventario-ropa "Repositorio GitHub del proyecto"

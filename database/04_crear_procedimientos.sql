@@ -125,13 +125,20 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Deja el usuario disponible para el trigger de auditoría (05_crear_triggers_auditoria.sql)
-    EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;
+    -- El trigger usa este valor para identificar al usuario de la operación.
+    BEGIN TRY
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;
 
-    INSERT INTO Prenda (CodigoSKU, Nombre, CategoriaId, TallaId, ColorId, Marca, Precio, Stock, StockMinimo)
-    VALUES (@CodigoSKU, @Nombre, @CategoriaId, @TallaId, @ColorId, @Marca, @Precio, @Stock, @StockMinimo);
+        INSERT INTO Prenda (CodigoSKU, Nombre, CategoriaId, TallaId, ColorId, Marca, Precio, Stock, StockMinimo)
+        VALUES (@CodigoSKU, @Nombre, @CategoriaId, @TallaId, @ColorId, @Marca, @Precio, @Stock, @StockMinimo);
 
-    SET @IdPrendaNueva = SCOPE_IDENTITY();
+        SET @IdPrendaNueva = SCOPE_IDENTITY();
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = NULL;
+    END TRY
+    BEGIN CATCH
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = NULL;
+        THROW;
+    END CATCH
 END
 GO
 
@@ -151,19 +158,27 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;
+    BEGIN TRY
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;
 
-    UPDATE Prenda
-    SET CodigoSKU   = @CodigoSKU,
-        Nombre      = @Nombre,
-        CategoriaId = @CategoriaId,
-        TallaId     = @TallaId,
-        ColorId     = @ColorId,
-        Marca       = @Marca,
-        Precio      = @Precio,
-        Stock       = @Stock,
-        StockMinimo = @StockMinimo
-    WHERE IdPrenda = @IdPrenda;
+        UPDATE Prenda
+        SET CodigoSKU   = @CodigoSKU,
+            Nombre      = @Nombre,
+            CategoriaId = @CategoriaId,
+            TallaId     = @TallaId,
+            ColorId     = @ColorId,
+            Marca       = @Marca,
+            Precio      = @Precio,
+            Stock       = @Stock,
+            StockMinimo = @StockMinimo
+        WHERE IdPrenda = @IdPrenda;
+
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = NULL;
+    END TRY
+    BEGIN CATCH
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = NULL;
+        THROW;
+    END CATCH
 END
 GO
 
@@ -174,12 +189,20 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;
+    BEGIN TRY
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;
 
-    UPDATE Prenda
-    SET Activo = 0
-    WHERE IdPrenda = @IdPrenda
-      AND Activo = 1;
+        UPDATE Prenda
+        SET Activo = 0
+        WHERE IdPrenda = @IdPrenda
+          AND Activo = 1;
+
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = NULL;
+    END TRY
+    BEGIN CATCH
+        EXEC sp_set_session_context @key = N'IdUsuario', @value = NULL;
+        THROW;
+    END CATCH
 END
 GO
 
@@ -205,6 +228,33 @@ BEGIN
     SELECT IdUsuario, NombreUsuario, NombreCompleto, Rol, Activo
     FROM UsuarioSistema
     ORDER BY NombreCompleto;
+END
+GO
+
+-- Alta única del primer Administrador. El bloqueo de tabla dentro de la
+-- transacción impide que dos primeras configuraciones creen cuentas a la vez.
+CREATE OR ALTER PROCEDURE sp_Usuario_CrearAdministradorInicial
+    @NombreUsuario  VARCHAR(50),
+    @NombreCompleto VARCHAR(100),
+    @PasswordHash   VARBINARY(64),
+    @PasswordSalt   VARBINARY(32)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRANSACTION;
+
+    IF EXISTS (SELECT 1 FROM UsuarioSistema WITH (TABLOCKX, HOLDLOCK))
+    BEGIN
+        ROLLBACK TRANSACTION;
+        ;THROW 51003, 'El Administrador inicial ya fue creado.', 1;
+    END;
+
+    INSERT INTO UsuarioSistema (NombreUsuario, NombreCompleto, PasswordHash, PasswordSalt, Rol)
+    VALUES (@NombreUsuario, @NombreCompleto, @PasswordHash, @PasswordSalt, 'Administrador');
+
+    COMMIT TRANSACTION;
 END
 GO
 

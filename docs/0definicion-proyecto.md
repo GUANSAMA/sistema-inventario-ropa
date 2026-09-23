@@ -29,13 +29,13 @@ El sistema incluirá el mantenimiento de prendas, la gestión de catálogos bás
 
 La aplicación permitirá registrar, listar, buscar, actualizar y desactivar prendas. También permitirá filtrar el inventario por categoría, talla, color y estado. Cuando el stock sea igual o inferior al stock mínimo, el sistema podrá mostrar una alerta de bajo inventario.
 
-La trazabilidad registrará las operaciones relevantes sobre las prendas. El reporte PDF permitirá presentar el inventario y el historial de auditoría en un formato portable.
+La trazabilidad registrará las operaciones relevantes sobre las prendas. Se generarán dos reportes PDF independientes: uno para el inventario y otro para el historial de auditoría.
 
 ## 4. Exclusiones iniciales
 
 La primera versión no incluirá ventas, compras a proveedores, pagos, facturación electrónica, integración con tiendas en línea ni control de bodegas múltiples. Tampoco se implementará un sistema contable.
 
-El control de usuarios se limitará a un login básico con los roles **Administrador** y **Encargado de Inventario**, salvo que el profesor solicite una profundidad mayor. La tabla de usuarios se utilizará para identificar al usuario que ejecuta cada operación.
+El control de usuarios incluirá inicio de sesión con los roles **Administrador** y **Operador de Bodega**. El Administrador podrá consultar auditoría y gestionar usuarios; ambos roles podrán consultar, registrar y actualizar prendas, mientras que solo el Administrador podrá desactivarlas. La tabla `UsuarioSistema` identificará al usuario que ejecuta cada operación.
 
 ## 5. Actores
 
@@ -43,9 +43,9 @@ El control de usuarios se limitará a un login básico con los roles **Administr
 
 El Administrador podrá iniciar sesión, consultar el inventario, registrar nuevas prendas, modificar datos, desactivar prendas, consultar la auditoría y generar reportes.
 
-### Encargado de Inventario
+### Operador de Bodega
 
-El Encargado de Inventario podrá iniciar sesión, consultar el inventario y registrar o actualizar información operativa de las prendas según las reglas de autorización que se definan en la Fase 1.
+El Operador de Bodega podrá iniciar sesión, consultar, registrar y actualizar prendas. No podrá gestionar usuarios ni consultar la auditoría.
 
 ### Sistema
 
@@ -98,13 +98,7 @@ Prenda          1 ──── N AuditoriaInventario
 | Control de versiones | Git y GitHub |
 | Repositorio | `https://github.com/GUANSAMA/sistema-inventario-ropa` |
 
-La cadena de conexión de desarrollo propuesta es:
-
-```text
-Server=.\\SQLEXPRESS;Database=InventarioRopaDB;Integrated Security=True;TrustServerCertificate=True;
-```
-
-Esta cadena no contiene una contraseña. No se deben publicar credenciales ni datos sensibles en GitHub.
+La aplicación usa por defecto la instancia local `SQLEXPRESS` con autenticación integrada de Windows. La cadena se puede reemplazar mediante la variable de entorno `INVENTARIO_ROPA_SQLSERVER`; no se guardan contraseñas en el repositorio.
 
 ## 9. Arquitectura propuesta
 
@@ -132,12 +126,12 @@ La capa UI recibirá las acciones del usuario y mostrará los resultados. La cap
 ```text
 sistema-inventario-ropa/
 ├── docs/
-│   ├── informe-tecnico.md
-│   ├── requerimientos.md
-│   ├── casos-uso.puml
-│   ├── diagrama-clases.puml
-│   ├── modelo-relacional.md
-│   └── arquitectura.md
+│   ├── 0definicion-proyecto.md
+│   ├── 1requerimientos.md
+│   ├── 2casos_usos.md
+│   ├── 3diagrama_clases.md
+│   ├── 4diagrama_secuencia.md
+│   └── (documentos y diagramas del proyecto)
 ├── database/
 │   ├── 01_crear_base_datos.sql
 │   ├── 02_crear_tablas.sql
@@ -145,40 +139,38 @@ sistema-inventario-ropa/
 │   ├── 04_crear_procedimientos.sql
 │   └── 05_crear_triggers_auditoria.sql
 ├── src/
-│   └── InventarioRopa/
-│       ├── UI/
-│       ├── BLL/
-│       ├── DAL/
-│       ├── Entities/
-│       ├── Program.cs
-│       └── InventarioRopa.csproj
+│   ├── InventarioRopa.sln
+│   ├── InventarioRopa.UI/
+│   ├── InventarioRopa.BLL/
+│   ├── InventarioRopa.DAL/
+│   └── InventarioRopa.Entities/
 ├── README.md
 └── .gitignore
 ```
 
 ## 11. Plan de trabajo
 
-### Fase 1: Análisis y documentación
+### Fase 1: Análisis y documentación (borrador preparado; revisar consistencia)
 
-Se completará la problemática, el alcance, los objetivos, los requisitos funcionales y no funcionales, la tríada de requisitos, los controles de seguridad y los criterios de aceptación.
+El borrador documenta la problemática, el alcance, los objetivos, los requisitos funcionales y no funcionales, la tríada, los controles de seguridad y criterios iniciales de aceptación.
 
-### Fase 2: Modelado UML y diseño relacional
+### Fase 2: Modelado UML y diseño relacional (diagramas y modelo inicial preparados)
 
-Se elaborarán los diagramas de casos de uso y de clases. Después se definirá el modelo relacional, el diccionario de datos y la normalización en 1FN, 2FN y 3FN.
+Ya hay diagramas de casos de uso, clases y secuencia, además del modelo relacional y su normalización. Falta revisar la alineación final entre estos artefactos.
 
-### Fase 3: Base de datos
+### Fase 3: Base de datos (scripts iniciales preparados; validar en SQL Server)
 
-Se crearán las tablas, restricciones, claves, datos de prueba, procedimientos almacenados y triggers de auditoría.
+Los scripts iniciales de tablas, restricciones, datos de prueba, procedimientos y triggers están preparados. Falta ejecutarlos y verificarlos en SQL Server.
 
-### Fase 4: Aplicación por capas
+### Fase 4: Aplicación por capas (primera implementación preparada)
 
-Se implementarán las entidades, la conexión, los repositorios DAL, las reglas BLL y los formularios Windows Forms.
+La solución ya contiene cuatro proyectos para UI, BLL, DAL y Entities. Incluye entidades, conexión configurable, llamadas a procedimientos de prendas, validaciones, inicio de sesión, gestión de usuarios, consulta de auditoría y reportes PDF. Falta compilar y comprobar los flujos con SQL Server.
 
-### Fase 5: Auditoría y reportes
+### Fase 5: Auditoría y reportes (primera implementación preparada)
 
-Se implementará la consulta del historial y la generación de reportes PDF para inventario y auditoría.
+La aplicación ya incluye consulta de auditoría y reportes PDF independientes de inventario e historial. Falta verificarlos con datos de SQL Server.
 
-### Fase 6: Pruebas y entrega
+### Fase 6: Validación y entrega (pendiente)
 
 Se verificarán los casos de uso, las validaciones, los errores de conexión, la ejecución de procedimientos, la auditoría, los reportes y la coherencia general. Finalmente se actualizarán el README y el historial de commits.
 
@@ -207,11 +199,11 @@ Antes de cerrar la Fase 1 se debe confirmar con el profesor el formato final del
 
 También deben completarse los datos de portada, como el nombre completo del estudiante, el docente, la institución, la sede y la fecha oficial de entrega.
 
-## 14. Criterio para continuar
+## 14. Estado y próximos pasos
 
-La siguiente fase será la redacción del informe técnico y de los requerimientos. No se deben crear todavía las tablas ni el código C# hasta que los nombres de las entidades, los roles, el alcance y los requerimientos hayan sido revisados.
+La definición, los requerimientos, los diagramas, el modelo relacional, los scripts y una primera versión de la aplicación están preparados. Queda pendiente ejecutar la base de datos, compilar y verificar los flujos antes de dar el proyecto por terminado.
 
 ## Referencias
 
-[1]: /home/ubuntu/upload/Guia_Trabajo_Practico_y_Rubrica_Evaluacion_v21(2).pdf "Guía de Trabajo Práctico Integrador y Rúbrica de Evaluación"
+[1]: Guía de Trabajo Práctico Integrador y Rúbrica de Evaluación, PDF entregado por el docente.
 [2]: https://github.com/GUANSAMA/sistema-inventario-ropa "Repositorio GitHub del proyecto"

@@ -48,8 +48,8 @@ package "Entities" {
     - idUsuario : int
     - nombreUsuario : string
     - nombreCompleto : string
-    - passwordHash : string
-    - passwordSalt : string
+    - passwordHash : byte[]
+    - passwordSalt : byte[]
     - rol : string
     - activo : bool
     + VerificarPassword(password : string) : bool
@@ -171,6 +171,7 @@ package "DAL - Acceso a Datos" {
     + ObtenerPorNombre(
         nombreUsuario : string
       ) : UsuarioSistema
+    + CrearAdministradorInicial(usuario : UsuarioSistema) : bool
     + Registrar(usuario : UsuarioSistema) : bool
     + Listar() : List<UsuarioSistema>
     + Desactivar(idUsuario : int) : bool

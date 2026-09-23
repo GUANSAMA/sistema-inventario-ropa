@@ -1,0 +1,12 @@
+# Artefactos de compilación de .NET
+**/bin/
+**/obj/
+
+# Archivos locales de usuario y editor
+*.user
+.vs/
+.vscode/
+
+# Configuración local y secretos
+.env
+appsettings.Local.json
