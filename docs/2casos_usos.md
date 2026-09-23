@@ -1,3 +1,4 @@
+```plantuml
 @startuml
 left to right direction
 
@@ -7,6 +8,7 @@ skinparam actorStyle awesome
 skinparam linetype ortho
 skinparam nodesep 35
 skinparam ranksep 45
+
 skinparam usecase {
   BackgroundColor #F8FAFC
   BorderColor #1E3A8A
@@ -19,15 +21,21 @@ actor "Operador de Bodega" as Operador
 rectangle "Sistema de Inventario de Ropa" {
 
   usecase "RF01\nIniciar sesión" as Login
+
   usecase "RF02\nGestionar prendas\n(CRUD y desactivación)" as Prendas
+
   usecase "RF03\nConsultar catálogos" as Catalogos
+
   usecase "RF04\nBuscar y filtrar\ninventario" as Filtros
+
   usecase "RF07\nConsultar auditoría" as Auditoria
+
   usecase "RF08\nGenerar reportes PDF" as Reportes
+
   usecase "RF09\nGestionar usuarios" as Usuarios
 }
 
-' Administrador
+' Funciones del Administrador
 Admin --> Login
 Admin --> Prendas
 Admin --> Catalogos
@@ -36,7 +44,7 @@ Admin --> Auditoria
 Admin --> Reportes
 Admin --> Usuarios
 
-' Operador de Bodega
+' Funciones del Operador de Bodega
 Operador --> Login
 Operador --> Prendas
 Operador --> Catalogos
@@ -50,25 +58,34 @@ end note
 
 note right of Prendas
 Incluye:
+
 - Registrar prendas.
 - Consultar prendas.
 - Modificar prendas.
 - Desactivar lógicamente.
-- RF05: Validar precio y stock.
-- RF06: Registrar auditoría automática.
+- RF05: validar precio y stock.
+- RF06: registrar auditoría automática.
 end note
 
 note right of Auditoria
 Solo el Administrador puede consultar
 los registros generados por triggers.
-Se auditan INSERT, UPDATE y DESACTIVAR.
+
+Se auditan:
+
+INSERT
+UPDATE
+DESACTIVAR
 end note
 
 note right of Reportes
 Genera obligatoriamente:
+
 - PDF de inventario.
 - PDF de auditoría.
-La ruta se selecciona con SaveFileDialog.
+
+La ruta se selecciona con
+SaveFileDialog.
 end note
 
 note right of Usuarios
@@ -77,3 +94,4 @@ consultar y deshabilitar usuarios.
 end note
 
 @enduml
+```
