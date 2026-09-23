@@ -39,8 +39,8 @@ public sealed class FormularioUsuarios : Form
     private void Cargar()
     {
         try { _grilla.DataSource = _servicio.ListarUsuarios();
-            if (_grilla.Columns.Contains(nameof(UsuarioSistema.PasswordHash))) _grilla.Columns[nameof(UsuarioSistema.PasswordHash)].Visible = false;
-            if (_grilla.Columns.Contains(nameof(UsuarioSistema.PasswordSalt))) _grilla.Columns[nameof(UsuarioSistema.PasswordSalt)].Visible = false; }
+            if (_grilla.Columns[nameof(UsuarioSistema.PasswordHash)] is { } hashColumn) hashColumn.Visible = false;
+            if (_grilla.Columns[nameof(UsuarioSistema.PasswordSalt)] is { } saltColumn) saltColumn.Visible = false; }
         catch { MessageBox.Show("No se pudo cargar la lista de usuarios.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
     }
 

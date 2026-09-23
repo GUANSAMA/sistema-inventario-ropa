@@ -73,7 +73,7 @@ public sealed class ReporteServicio
             throw new UnauthorizedAccessException("Solo el Administrador puede generar reportes.");
     }
 
-    private static IDocument Documento(string titulo, Action<ColumnDescriptor> contenido) =>
+    private static IDocument Documento(string titulo, Action<IContainer> contenido) =>
         Document.Create(documento => documento.Page(pagina =>
         {
             pagina.Size(PageSizes.A4.Landscape());
@@ -85,7 +85,7 @@ public sealed class ReporteServicio
                 col.Item().Text(titulo).FontSize(16).Bold();
                 col.Item().Text($"Generado: {DateTime.Now:dd/MM/yyyy HH:mm:ss}").FontSize(8).FontColor(Colors.Grey.Darken2);
             });
-            pagina.Content().PaddingVertical(12).Column(contenido);
+            contenido(pagina.Content().PaddingVertical(12));
             pagina.Footer().AlignRight().Text(texto =>
             {
                 texto.Span("Página "); texto.CurrentPageNumber(); texto.Span(" de "); texto.TotalPages();

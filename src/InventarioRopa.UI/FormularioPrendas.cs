@@ -165,7 +165,7 @@ public sealed class FormularioPrendas : Form
             bool? estado = (_filtroEstado.SelectedItem as OpcionFiltro<bool?>)?.Valor;
             _grilla.DataSource = _prendas.Buscar(_buscar.Text, categoria, talla, color, estado);
             foreach (string columna in new[] { nameof(Prenda.IdPrenda), nameof(Prenda.CategoriaId), nameof(Prenda.TallaId), nameof(Prenda.ColorId) })
-                if (_grilla.Columns.Contains(columna)) _grilla.Columns[columna].Visible = false;
+                if (_grilla.Columns[columna] is { } columnaOculta) columnaOculta.Visible = false;
             _grilla.Columns[nameof(Prenda.CodigoSKU)]!.HeaderText = "SKU";
             _grilla.Columns[nameof(Prenda.CategoriaNombre)]!.HeaderText = "Categoría";
             _grilla.Columns[nameof(Prenda.TallaNombre)]!.HeaderText = "Talla";

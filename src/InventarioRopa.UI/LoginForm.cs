@@ -1,6 +1,7 @@
 using System.Drawing;
 using InventarioRopa.BLL;
 using InventarioRopa.Entities;
+using DrawingColor = System.Drawing.Color;
 
 namespace InventarioRopa.UI;
 
@@ -13,7 +14,7 @@ public sealed class LoginForm : Form
     private readonly TextBox _confirmar = new();
     private readonly Label _etiquetaNombre = new() { Text = "Nombre completo" };
     private readonly Label _etiquetaConfirmar = new() { Text = "Confirmar contraseña" };
-    private readonly Label _mensaje = new() { AutoSize = true, ForeColor = Color.Firebrick };
+    private readonly Label _mensaje = new() { AutoSize = true, ForeColor = DrawingColor.Firebrick };
     private readonly Button _aceptar = new() { Text = "Iniciar sesión", AutoSize = true };
     private bool _altaInicial;
 
@@ -101,7 +102,7 @@ public sealed class LoginForm : Form
             {
                 if (_clave.Text != _confirmar.Text) throw new ArgumentException("Las contraseñas no coinciden.");
                 _autenticacion.CrearAdministradorInicial(_usuario.Text, _nombreCompleto.Text, _clave.Text);
-                _mensaje.ForeColor = Color.DarkGreen;
+                _mensaje.ForeColor = DrawingColor.DarkGreen;
                 _mensaje.Text = "Administrador creado. Inicie sesión con sus datos.";
                 _altaInicial = false;
                 CambiarAModoLogin();
@@ -116,12 +117,12 @@ public sealed class LoginForm : Form
         }
         catch (ArgumentException ex)
         {
-            _mensaje.ForeColor = Color.Firebrick;
+            _mensaje.ForeColor = DrawingColor.Firebrick;
             _mensaje.Text = ex.Message;
         }
         catch
         {
-            _mensaje.ForeColor = Color.Firebrick;
+            _mensaje.ForeColor = DrawingColor.Firebrick;
             _mensaje.Text = "No se pudo completar la operación. Revise la conexión o los datos ingresados.";
         }
     }
