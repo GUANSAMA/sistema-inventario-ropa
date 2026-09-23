@@ -1,0 +1,5 @@
+IF DB_ID(N'InventarioRopaDB') IS NULL
+BEGIN
+    CREATE DATABASE InventarioRopaDB;
+END
+GO
