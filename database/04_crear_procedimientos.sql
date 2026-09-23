@@ -231,8 +231,25 @@ BEGIN
 END
 GO
 
--- Alta única del primer Administrador. El bloqueo de tabla dentro de la
--- transacción impide que dos primeras configuraciones creen cuentas a la vez.
+CREATE OR ALTER PROCEDURE sp_Usuario_RequiereAdministradorInicial
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT CONVERT(BIT, CASE WHEN EXISTS
+    (
+        SELECT 1
+        FROM UsuarioSistema
+        WHERE DATALENGTH(PasswordHash) = 32
+          AND DATALENGTH(PasswordSalt) = 16
+    ) THEN 0 ELSE 1 END);
+END
+GO
+
+-- Alta inicial o recuperación de filas de prueba sin credenciales válidas.
+-- Conserva un IdUsuario existente para no romper referencias de auditoría,
+-- desactiva las demás filas de relleno y bloquea la operación si ya hay
+-- credenciales con el formato usado por la aplicación.
 CREATE OR ALTER PROCEDURE sp_Usuario_CrearAdministradorInicial
     @NombreUsuario  VARCHAR(50),
     @NombreCompleto VARCHAR(100),
@@ -243,16 +260,62 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    BEGIN TRANSACTION;
-
-    IF EXISTS (SELECT 1 FROM UsuarioSistema WITH (TABLOCKX, HOLDLOCK))
+    IF DATALENGTH(@PasswordHash) <> 32 OR DATALENGTH(@PasswordSalt) <> 16
     BEGIN
-        ROLLBACK TRANSACTION;
-        ;THROW 51003, 'El Administrador inicial ya fue creado.', 1;
+        THROW 51004, 'Las credenciales recibidas no tienen el formato esperado.', 1;
     END;
 
-    INSERT INTO UsuarioSistema (NombreUsuario, NombreCompleto, PasswordHash, PasswordSalt, Rol)
-    VALUES (@NombreUsuario, @NombreCompleto, @PasswordHash, @PasswordSalt, 'Administrador');
+    BEGIN TRANSACTION;
+
+    DECLARE @IdUsuarioExistente INT = NULL;
+    SELECT @IdUsuarioExistente = MIN(IdUsuario)
+    FROM UsuarioSistema WITH (TABLOCKX, HOLDLOCK);
+
+    IF EXISTS
+    (
+        SELECT 1 FROM UsuarioSistema
+        WHERE DATALENGTH(PasswordHash) = 32
+          AND DATALENGTH(PasswordSalt) = 16
+    )
+    BEGIN
+        ROLLBACK TRANSACTION;
+        THROW 51003, 'El Administrador inicial ya fue creado.', 1;
+    END;
+
+    IF @IdUsuarioExistente IS NOT NULL
+    BEGIN
+        SET @IdUsuarioExistente = NULL;
+        SELECT TOP (1) @IdUsuarioExistente = IdUsuario
+        FROM UsuarioSistema
+        WHERE NombreUsuario = @NombreUsuario
+        ORDER BY CASE WHEN Rol = 'Administrador' THEN 0 ELSE 1 END, IdUsuario;
+
+        IF @IdUsuarioExistente IS NULL
+        BEGIN
+            SELECT TOP (1) @IdUsuarioExistente = IdUsuario
+            FROM UsuarioSistema
+            ORDER BY CASE WHEN Rol = 'Administrador' THEN 0 ELSE 1 END, IdUsuario;
+        END;
+
+        UPDATE UsuarioSistema
+        SET NombreUsuario = @NombreUsuario,
+            NombreCompleto = @NombreCompleto,
+            PasswordHash = @PasswordHash,
+            PasswordSalt = @PasswordSalt,
+            Rol = 'Administrador',
+            Activo = 1
+        WHERE IdUsuario = @IdUsuarioExistente;
+
+        UPDATE UsuarioSistema
+        SET Activo = 0
+        WHERE IdUsuario <> @IdUsuarioExistente
+          AND (DATALENGTH(PasswordHash) <> 32 OR DATALENGTH(PasswordSalt) <> 16);
+    END
+    ELSE
+    BEGIN
+        INSERT INTO UsuarioSistema (NombreUsuario, NombreCompleto, PasswordHash, PasswordSalt, Rol)
+        VALUES (@NombreUsuario, @NombreCompleto, @PasswordHash, @PasswordSalt, 'Administrador');
+    END;
 
     COMMIT TRANSACTION;
 END

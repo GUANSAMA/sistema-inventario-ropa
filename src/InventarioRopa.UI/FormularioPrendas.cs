@@ -18,13 +18,9 @@ public sealed class FormularioPrendas : Form
     private readonly TextBox _precio = new();
     private readonly TextBox _stock = new();
     private readonly TextBox _stockMinimo = new();
-    private readonly TextBox _buscar = new();
     private readonly ComboBox _categoria = Lista();
     private readonly ComboBox _talla = Lista();
     private readonly ComboBox _color = Lista();
-    private readonly ComboBox _filtroCategoria = Lista();
-    private readonly ComboBox _filtroTalla = Lista();
-    private readonly ComboBox _filtroColor = Lista();
     private readonly ComboBox _filtroEstado = Lista();
     private int? _idSeleccionado;
     private bool _modoEdicion;
@@ -58,16 +54,12 @@ public sealed class FormularioPrendas : Form
     private Control ConstruirFiltros()
     {
         var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, WrapContents = false, AutoScroll = true };
-        _buscar.Width = 210; _buscar.PlaceholderText = "Buscar por SKU o nombre";
-        PrepararFiltro(_filtroCategoria, "Todas las categorías");
-        PrepararFiltro(_filtroTalla, "Todas las tallas");
-        PrepararFiltro(_filtroColor, "Todos los colores");
         _filtroEstado.Items.Add(new OpcionFiltro<bool?>(null, "Todos los estados"));
         _filtroEstado.Items.Add(new OpcionFiltro<bool?>(true, "Activas"));
         _filtroEstado.Items.Add(new OpcionFiltro<bool?>(false, "Inactivas"));
         _filtroEstado.SelectedIndex = 0;
         var buscar = Boton("Buscar", (_, _) => BuscarPrendas());
-        panel.Controls.AddRange([_buscar, _filtroCategoria, _filtroTalla, _filtroColor, _filtroEstado, buscar]);
+        panel.Controls.AddRange([_filtroEstado, buscar]);
         return panel;
     }
 
@@ -76,8 +68,10 @@ public sealed class FormularioPrendas : Form
         var grupo = new GroupBox { Text = "Datos de la prenda", Dock = DockStyle.Fill, Padding = new Padding(8) };
         var tabla = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 6, RowCount = 2 };
         for (int i = 0; i < 6; i++) tabla.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 16.67f));
-        tabla.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
-        tabla.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
+        // Cada campo contiene una etiqueta y un control; 38 px no alcanzan
+        // para mostrar ambos sin que la fila siguiente los recorte.
+        tabla.RowStyles.Add(new RowStyle(SizeType.Absolute, 68));
+        tabla.RowStyles.Add(new RowStyle(SizeType.Absolute, 68));
         AgregarCampo(tabla, 0, 0, "SKU", _sku);
         AgregarCampo(tabla, 1, 0, "Nombre", _nombre);
         AgregarCampo(tabla, 2, 0, "Categoría", _categoria);
@@ -121,10 +115,9 @@ public sealed class FormularioPrendas : Form
             var categorias = _catalogos.ListarCategorias();
             var tallas = _catalogos.ListarTallas();
             var colores = _catalogos.ListarColores();
-            _categoria.DataSource = categorias; _categoria.DisplayMember = nameof(Categoria.Nombre); _categoria.ValueMember = nameof(Categoria.IdCategoria);
-            _talla.DataSource = tallas; _talla.DisplayMember = nameof(Talla.Nombre); _talla.ValueMember = nameof(Talla.IdTalla);
-            _color.DataSource = colores; _color.DisplayMember = nameof(ColorCatalogo.Nombre); _color.ValueMember = nameof(ColorCatalogo.IdColor);
-            CargarFiltros(categorias, tallas, colores);
+            CargarFiltro(_categoria, categorias.Select(x => new OpcionFiltro<int?>(x.IdCategoria, x.Nombre)));
+            CargarFiltro(_talla, tallas.Select(x => new OpcionFiltro<int?>(x.IdTalla, x.Nombre)));
+            CargarFiltro(_color, colores.Select(x => new OpcionFiltro<int?>(x.IdColor, x.Nombre)));
             BuscarPrendas();
         }
         catch
@@ -134,24 +127,13 @@ public sealed class FormularioPrendas : Form
         }
     }
 
-    private void CargarFiltros(List<Categoria> categorias, List<Talla> tallas, List<ColorCatalogo> colores)
-    {
-        CargarFiltro(_filtroCategoria, categorias.Select(x => new OpcionFiltro<int?>(x.IdCategoria, x.Nombre)));
-        CargarFiltro(_filtroTalla, tallas.Select(x => new OpcionFiltro<int?>(x.IdTalla, x.Nombre)));
-        CargarFiltro(_filtroColor, colores.Select(x => new OpcionFiltro<int?>(x.IdColor, x.Nombre)));
-    }
-
     private static void CargarFiltro(ComboBox combo, IEnumerable<OpcionFiltro<int?>> opciones)
     {
-        combo.Items.Clear(); combo.Items.Add(new OpcionFiltro<int?>(null, "Todos"));
-        foreach (var opcion in opciones) combo.Items.Add(opcion);
-        combo.SelectedIndex = 0;
-    }
-
-    private static void PrepararFiltro(ComboBox combo, string texto)
-    {
-        combo.Width = 145;
-        combo.Items.Add(new OpcionFiltro<int?>(null, texto));
+        var elementos = new List<OpcionFiltro<int?>> { new(null, "Todos") };
+        elementos.AddRange(opciones);
+        combo.DataSource = elementos;
+        combo.DisplayMember = nameof(OpcionFiltro<int?>.Texto);
+        combo.ValueMember = nameof(OpcionFiltro<int?>.Valor);
         combo.SelectedIndex = 0;
     }
 
@@ -159,11 +141,11 @@ public sealed class FormularioPrendas : Form
     {
         try
         {
-            int? categoria = (_filtroCategoria.SelectedItem as OpcionFiltro<int?>)?.Valor;
-            int? talla = (_filtroTalla.SelectedItem as OpcionFiltro<int?>)?.Valor;
-            int? color = (_filtroColor.SelectedItem as OpcionFiltro<int?>)?.Valor;
+            int? categoria = (_categoria.SelectedItem as OpcionFiltro<int?>)?.Valor;
+            int? talla = (_talla.SelectedItem as OpcionFiltro<int?>)?.Valor;
+            int? color = (_color.SelectedItem as OpcionFiltro<int?>)?.Valor;
             bool? estado = (_filtroEstado.SelectedItem as OpcionFiltro<bool?>)?.Valor;
-            _grilla.DataSource = _prendas.Buscar(_buscar.Text, categoria, talla, color, estado);
+            _grilla.DataSource = _prendas.Buscar(string.Empty, categoria, talla, color, estado);
             foreach (string columna in new[] { nameof(Prenda.IdPrenda), nameof(Prenda.CategoriaId), nameof(Prenda.TallaId), nameof(Prenda.ColorId) })
                 if (_grilla.Columns[columna] is { } columnaOculta) columnaOculta.Visible = false;
             _grilla.Columns[nameof(Prenda.CodigoSKU)]!.HeaderText = "SKU";

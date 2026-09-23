@@ -15,7 +15,7 @@ public sealed class AutenticacionServicio
 
     public AutenticacionServicio(UsuarioRepositorio usuarios) => _usuarios = usuarios;
 
-    public bool RequiereAdministradorInicial() => _usuarios.Listar().Count == 0;
+    public bool RequiereAdministradorInicial() => _usuarios.RequiereAdministradorInicial();
 
     public List<UsuarioSistema> ListarUsuarios() => _usuarios.Listar();
 

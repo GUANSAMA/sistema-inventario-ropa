@@ -33,6 +33,17 @@ public sealed class UsuarioRepositorio
         return usuarios;
     }
 
+    public bool RequiereAdministradorInicial()
+    {
+        using SqlConnection conexion = Conexion.Crear();
+        using SqlCommand comando = new("sp_Usuario_RequiereAdministradorInicial", conexion)
+        {
+            CommandType = CommandType.StoredProcedure
+        };
+        conexion.Open();
+        return Convert.ToBoolean(comando.ExecuteScalar());
+    }
+
     public void CrearAdministradorInicial(UsuarioSistema usuario)
     {
         using SqlConnection conexion = Conexion.Crear();
