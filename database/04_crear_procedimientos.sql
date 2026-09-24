@@ -125,6 +125,13 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
+    IF NOT EXISTS (SELECT 1 FROM Categoria WHERE IdCategoria = @CategoriaId AND Activo = 1)
+        THROW 51005, 'La categoría no existe o está inactiva.', 1;
+    IF NOT EXISTS (SELECT 1 FROM Talla WHERE IdTalla = @TallaId AND Activo = 1)
+        THROW 51006, 'La talla no existe o está inactiva.', 1;
+    IF NOT EXISTS (SELECT 1 FROM Color WHERE IdColor = @ColorId AND Activo = 1)
+        THROW 51007, 'El color no existe o está inactivo.', 1;
+
     -- El trigger usa este valor para identificar al usuario de la operación.
     BEGIN TRY
         EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;
@@ -157,6 +164,13 @@ CREATE OR ALTER PROCEDURE sp_Prenda_Actualizar
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM Categoria WHERE IdCategoria = @CategoriaId AND Activo = 1)
+        THROW 51005, 'La categoría no existe o está inactiva.', 1;
+    IF NOT EXISTS (SELECT 1 FROM Talla WHERE IdTalla = @TallaId AND Activo = 1)
+        THROW 51006, 'La talla no existe o está inactiva.', 1;
+    IF NOT EXISTS (SELECT 1 FROM Color WHERE IdColor = @ColorId AND Activo = 1)
+        THROW 51007, 'El color no existe o está inactivo.', 1;
 
     BEGIN TRY
         EXEC sp_set_session_context @key = N'IdUsuario', @value = @IdUsuario;

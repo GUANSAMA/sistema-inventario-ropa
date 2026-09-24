@@ -33,6 +33,8 @@ GO
 GO
 -- ==========================================
 -- Prendas de ejemplo (18 filas)
+-- Estas filas son datos de preparación y se cargan antes de instalar los
+-- triggers de auditoría; por lo tanto, no generan eventos en AuditoriaInventario.
 -- Usa subconsultas por Nombre para no depender de que los IDENTITY
 -- de los catálogos empiecen exactamente en 1.
 -- ==========================================

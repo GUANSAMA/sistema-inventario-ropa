@@ -100,11 +100,11 @@ La desactivación será lógica mediante el campo `Activo`. No se eliminará fí
 
 ### RF03 — Consulta de catálogos
 
-El sistema debe cargar categorías, tallas y colores activos para utilizarlos en los controles de selección del mantenedor de prendas.
+El sistema debe cargar categorías, tallas y colores activos para utilizarlos en los controles de selección del mantenedor de prendas. Los procedimientos de alta y modificación deben rechazar referencias inexistentes o inactivas.
 
 ### RF04 — Búsqueda y filtrado
 
-El sistema debe permitir buscar prendas por código SKU o nombre, y filtrar el inventario por categoría, talla, color y estado activo.
+El sistema debe permitir buscar prendas por código SKU o nombre desde la pantalla del mantenedor, y combinar esa búsqueda con filtros por categoría, talla, color y estado.
 
 ### RF05 — Validación de precio y stock
 
@@ -114,7 +114,7 @@ El sistema debe validar que el precio sea mayor que cero y que el stock y el sto
 
 El sistema debe registrar automáticamente las operaciones `INSERT`, `UPDATE` y `DESACTIVAR` realizadas sobre la entidad `Prenda`.
 
-El registro debe incluir la operación, fecha y hora, usuario, identificador de la prenda y valores anteriores y nuevos cuando corresponda.
+El registro debe incluir la operación, fecha y hora, usuario, identificador de la prenda y valores anteriores y nuevos cuando corresponda. Los registros cargados por el script de datos de prueba antes de instalar los triggers son datos de preparación y no generan eventos de auditoría.
 
 La auditoría se implementará principalmente mediante triggers en SQL Server y deberá ejecutarse dentro de la misma transacción de la operación de inventario.
 
@@ -188,7 +188,7 @@ La tríada se define mediante **Rol o Usuario + Necesidad o Acción + Criterio d
 |---|---|---|---|
 | TR01 | Administrador y Operador de Bodega | Iniciar sesión para acceder al sistema según el rol asignado. | Las credenciales válidas permiten el acceso; las inválidas son rechazadas; la contraseña no se almacena en texto plano y las funciones se limitan según el rol. |
 | TR02 | Administrador y Operador de Bodega | Registrar, consultar y modificar prendas; el Administrador también puede desactivarlas. | El SKU es único; las claves foráneas existen; los datos válidos se guardan mediante procedimientos almacenados; solo el Administrador puede desactivar y esa operación cambia `Activo` y conserva el historial. |
-| TR03 | Administrador y Operador autorizado | Seleccionar categorías, tallas y colores activos para clasificar una prenda. | Los controles muestran solo catálogos válidos y la base rechaza referencias inexistentes o inactivas. |
+| TR03 | Administrador y Operador autorizado | Seleccionar categorías, tallas y colores activos para clasificar una prenda. | Los controles muestran solo catálogos válidos y los procedimientos de base de datos rechazan referencias inexistentes o inactivas. |
 | TR04 | Administrador y Operador de Bodega | Buscar y filtrar el inventario. | La grilla muestra únicamente los registros que coinciden con los filtros y la búsqueda utiliza parámetros sin concatenar entradas SQL. |
 | TR05 | Administrador y Operador autorizado | Mantener precios y cantidades de stock válidas. | Se rechazan precios menores o iguales a cero, stock negativo y stock mínimo negativo; el precio se almacena como `DECIMAL(10,0)`. |
 | TR06 | Sistema | Registrar automáticamente los cambios realizados sobre las prendas. | Cada `INSERT`, `UPDATE` y `DESACTIVAR` crea una fila de auditoría con operación, usuario, fecha, identificador y valores de cambio dentro de la misma transacción. |
@@ -240,7 +240,7 @@ Los controles siguientes se utilizan como **referencia académica** para relacio
 | CP09 | Auditoría | Desactivar prenda | Desactivar una prenda | `Activo` cambia a falso y se crea una fila `DESACTIVAR`. |
 | CP10 | Autorización | Operador consulta auditoría | Intentar abrir el historial sin permiso | El sistema impide el acceso. |
 | CP11 | Seguridad | Entrada SQL | Ingresar `' OR 1=1 --` en una búsqueda | La entrada se trata como texto y no altera la consulta. |
-| CP12 | Filtros | Filtrar inventario | Seleccionar categoría o talla | La grilla muestra solo registros coincidentes. |
+| CP12 | Filtros | Buscar y filtrar inventario | Escribir parte de un SKU o nombre y combinarlo con categoría, talla, color o estado | La grilla muestra solo los registros coincidentes. |
 | CP13 | Reporte | Generar inventario PDF | Seleccionar ruta de guardado | Se crea un PDF legible con fecha, datos y páginas numeradas. |
 | CP14 | Reporte | Generar auditoría PDF | Seleccionar ruta de guardado | Se crea un PDF con operación, usuario, fecha y valores de cambio. |
 | CP15 | Errores | SQL Server no disponible | Usar una conexión inválida | La aplicación muestra un mensaje amigable y no se cierra inesperadamente. |

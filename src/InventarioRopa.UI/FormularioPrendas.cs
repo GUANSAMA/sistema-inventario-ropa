@@ -12,6 +12,7 @@ public sealed class FormularioPrendas : Form
     private readonly PrendaServicio _prendas = new();
     private readonly CatalogoServicio _catalogos = new();
     private readonly DataGridView _grilla = new();
+    private readonly TextBox _textoBusqueda = new() { PlaceholderText = "Buscar por SKU o nombre", Width = 250 };
     private readonly TextBox _sku = new();
     private readonly TextBox _nombre = new();
     private readonly TextBox _marca = new();
@@ -59,7 +60,15 @@ public sealed class FormularioPrendas : Form
         _filtroEstado.Items.Add(new OpcionFiltro<bool?>(false, "Inactivas"));
         _filtroEstado.SelectedIndex = 0;
         var buscar = Boton("Buscar", (_, _) => BuscarPrendas());
-        panel.Controls.AddRange([_filtroEstado, buscar]);
+        _textoBusqueda.KeyDown += (_, evento) =>
+        {
+            if (evento.KeyCode == Keys.Enter)
+            {
+                evento.SuppressKeyPress = true;
+                BuscarPrendas();
+            }
+        };
+        panel.Controls.AddRange([_textoBusqueda, _filtroEstado, buscar]);
         return panel;
     }
 
@@ -145,7 +154,7 @@ public sealed class FormularioPrendas : Form
             int? talla = (_talla.SelectedItem as OpcionFiltro<int?>)?.Valor;
             int? color = (_color.SelectedItem as OpcionFiltro<int?>)?.Valor;
             bool? estado = (_filtroEstado.SelectedItem as OpcionFiltro<bool?>)?.Valor;
-            _grilla.DataSource = _prendas.Buscar(string.Empty, categoria, talla, color, estado);
+            _grilla.DataSource = _prendas.Buscar(_textoBusqueda.Text.Trim(), categoria, talla, color, estado);
             foreach (string columna in new[] { nameof(Prenda.IdPrenda), nameof(Prenda.CategoriaId), nameof(Prenda.TallaId), nameof(Prenda.ColorId) })
                 if (_grilla.Columns[columna] is { } columnaOculta) columnaOculta.Visible = false;
             _grilla.Columns[nameof(Prenda.CodigoSKU)]!.HeaderText = "SKU";
