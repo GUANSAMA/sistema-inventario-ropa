@@ -23,11 +23,10 @@ GO
 -- Alta inicial del Administrador
 -- ==========================================
 -- No se insertan hashes de relleno ni credenciales compartidas en este
--- script. En el primer inicio, la aplicación debe detectar que no existen
--- usuarios y ofrecer un alta inicial de Administrador. La aplicación genera
--- hash y salt con PBKDF2 y llama a sp_Usuario_CrearAdministradorInicial. Después de crear
--- el Administrador, el alta inicial debe quedar deshabilitada; las cuentas
--- siguientes se crean desde la función de gestión de usuarios.
+-- script. Si no hay usuarios activos, la aplicación ofrece una configuración
+-- inicial de Administrador, genera hash y salt con PBKDF2 y llama a
+-- sp_Usuario_CrearAdministradorInicial. Después abre directamente el inventario;
+-- los siguientes inicios no solicitan credenciales.
 -- El IdUsuario creado debe enviarse a los procedimientos de prendas para
 -- que los triggers puedan atribuir correctamente cada cambio.
 GO

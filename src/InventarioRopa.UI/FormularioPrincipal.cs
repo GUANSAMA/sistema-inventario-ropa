@@ -17,7 +17,7 @@ public partial class FormularioPrincipal : Form
         ConstruirMenu();
         var bienvenida = new Label
         {
-            Text = $"Bienvenido/a, {_usuario.NombreCompleto} ({_usuario.Rol})\n\nSeleccione una opción del menú para comenzar.",
+            Text = $"Acceso abierto, sin inicio de sesión\n\nLas operaciones se registrarán como {_usuario.NombreUsuario} ({_usuario.Rol}).\nSeleccione una opción del menú para comenzar.",
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleCenter,
             Font = new Font(Font.FontFamily, 16)
@@ -44,7 +44,7 @@ public partial class FormularioPrincipal : Form
             reportes.Click += (_, _) => new FormularioReportes(_usuario).ShowDialog(this);
             menu.Items.Add(reportes);
         }
-        menu.Items.Add(new ToolStripMenuItem("Cerrar sesión", null, (_, _) => Close()));
+        menu.Items.Add(new ToolStripMenuItem("Salir", null, (_, _) => Close()));
         MainMenuStrip = menu;
         Controls.Add(menu);
     }

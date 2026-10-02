@@ -102,12 +102,13 @@ public sealed class LoginForm : Form
             {
                 if (_clave.Text != _confirmar.Text) throw new ArgumentException("Las contraseñas no coinciden.");
                 _autenticacion.CrearAdministradorInicial(_usuario.Text, _nombreCompleto.Text, _clave.Text);
+                UsuarioAutenticado = _autenticacion.ListarUsuarios()
+                    .FirstOrDefault(u => u.Activo && u.Rol == "Administrador")
+                    ?? throw new InvalidOperationException("No se encontró el Administrador recién creado.");
                 _mensaje.ForeColor = DrawingColor.DarkGreen;
-                _mensaje.Text = "Administrador creado. Inicie sesión con sus datos.";
-                _altaInicial = false;
-                CambiarAModoLogin();
-                _aceptar.Text = "Iniciar sesión";
-                _clave.Clear(); _confirmar.Clear();
+                _mensaje.Text = "Administrador creado. Se abrirá el inventario.";
+                DialogResult = DialogResult.OK;
+                Close();
                 return;
             }
 
